@@ -1,27 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script type="module"></script>
     <meta charset="UTF-8">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDKVwHm3-RO3IkycB8VdwizUYQLgasGqzk",
-  authDomain: "lucky-triode-450317-g7.firebaseapp.com",
-  projectId: "lucky-triode-450317-g7",
-  storageBucket: "lucky-triode-450317-g7.firebasestorage.app",
-  messagingSenderId: "778199870672",
-  appId: "1:778199870672:web:62a9891e41b3a3d3f242d5"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PA-I Score Card Portal - Trident Public School</title>
     <style>
@@ -131,6 +111,7 @@ const db = getFirestore(app);
     <h1>🏫 Centralized Marks Upload & Result System</h1>
     
     <div class="grid">
+        <!-- Teacher Panel -->
         <div class="card">
             <h2>👨‍🏫 Teacher Entry Panel (PA-I Only)</h2>
             <form id="marksForm">
@@ -178,6 +159,7 @@ const db = getFirestore(app);
             </form>
         </div>
 
+        <!-- Student Download Panel -->
         <div class="card">
             <h2>👶 Student Report Card Download</h2>
             <div class="form-group">
@@ -205,6 +187,7 @@ const db = getFirestore(app);
             </div>
             <button class="btn-download" onclick="generateReportCard()">Generate Report Card</button>
 
+            <!-- Report Card View -->
             <div id="reportCard">
                 <div class="report-header">
                     <img src="download (4).jpeg" alt="TPS Logo" onerror="this.style.display='none';">
@@ -229,8 +212,7 @@ const db = getFirestore(app);
                             <th>Marks Obtained (PA-I)</th>
                         </tr>
                     </thead>
-                    <tbody id="marksTableBody">
-                    </tbody>
+                    <tbody id="marksTableBody"></tbody>
                 </table>
                 
                 <button class="print-btn" style="margin-top: 25px; background-color: var(--secondary);" onclick="window.print()">🖨️ Print / Save as PDF</button>
@@ -238,129 +220,29 @@ const db = getFirestore(app);
         </div>
     </div>
 </div>
-document.getElementById('marksForm')
-.addEventListener('submit', async function(e) {
-  e.preventDefault();
 
-  const rollNo =
-    document.getElementById('rollNo').value.trim();
+<!-- Firebase Config & Operations Module -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
 
-  const cls =
-    document.getElementById('studentClass').value;
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyDKVwHm3-RO3IkycB8VdwizUYQLgasGqzk",
+        authDomain: "lucky-triode-450317-g7.firebaseapp.com",
+        projectId: "lucky-triode-450317-g7",
+        storageBucket: "lucky-triode-450317-g7.firebasestorage.app",
+        messagingSenderId: "778199870672",
+        appId: "1:778199870672:web:62a9891e41b3a3d3f242d5"
+    };
 
-  const mappedMarksObj = {};
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-  document
-    .querySelectorAll(
-      '#dynamicSubjectsInputs input[type="number"]'
-    )
-    .forEach(input => {
-      const subject =
-        input.getAttribute('data-subject-name');
-
-      mappedMarksObj[subject] =
-        parseInt(input.value) || 0;
-    });
-
-  const studentData = {
-    name:
-      document.getElementById('studentName')
-      .value.trim(),
-    class: cls,
-    marks: mappedMarksObj
-  };
-
-  try {
-    await setDoc(
-      doc(db, "students", rollNo),
-      studentData
-    );
-
-    alert("🎉 Marks Saved Successfully");
-
-    this.reset();
-
-    document.getElementById(
-      'dynamicSubjectsInputs'
-    ).innerHTML =
-      `<div id="noClassWarning">
-      Please select a class to load its respective subjects.
-      </div>`;
-
-  } catch (err) {
-    console.log(err);
-    alert("Error saving marks.");
-  }
-});
-async function generateReportCard() {
-
-  const searchClass =
-    document.getElementById('searchClass').value;
-
-  const searchRoll =
-    document.getElementById('searchRoll')
-    .value.trim();
-
-  if (!searchClass) {
-    alert("Please select class");
-    return;
-  }
-
-  if (!searchRoll) {
-    alert("Please enter roll number");
-    return;
-  }
-
-  try {
-
-    const docRef =
-      doc(db, "students", searchRoll);
-
-    const docSnap =
-      await getDoc(docRef);
-
-    if (!docSnap.exists()) {
-      alert("No student record found");
-      return;
-    }
-
-    const student =
-      docSnap.data();
-
-    if (student.class !== searchClass) {
-      alert("Class mismatch");
-      return;
-    }
-
-    document.getElementById('lblName')
-      .innerText = student.name;
-
-    document.getElementById('lblRoll')
-      .innerText = searchRoll;
-
-    document.getElementById('lblClass')
-      .innerText = student.class;
-
-    // Yahan se aapka existing
-    // table generation code same rahega.
-
-  } catch (err) {
-    console.log(err);
-    alert("Unable to fetch record.");
-  }
-}
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
-<script>
     const schoolSubjectsConfiguration = {
         junior: [ "English", "Hindi", "Maths", "G.K"],
-        middle: ["English", "Maths", "Hindi", "Science", "SST",  "Computer", "M.Sc", "G.K"],
+        middle: ["English", "Maths", "Hindi", "Science", "SST", "Computer", "M.Sc", "G.K"],
         senior: ["English", "Maths", "Hindi", "Science", "SST"]
     };
 
@@ -375,7 +257,6 @@ service cloud.firestore {
         return [];
     }
 
-    // G.K और M.Sc के लिए 10 मार्क्स और बाकी के लिए 20 मार्क्स सेट करने का लॉजिक
     function getMaxMarksForSubject(subjectName) {
         if (subjectName === "G.K" || subjectName === "M.Sc") {
             return 10;
@@ -383,7 +264,8 @@ service cloud.firestore {
         return 20;
     }
 
-    function renderSubjectFields(selectedClass) {
+    // HTML elements ke action triggers ke liye globally attach kiya gaya hai
+    window.renderSubjectFields = function(selectedClass) {
         const targetContainer = document.getElementById('dynamicSubjectsInputs');
         const activeSubjects = getSubjectGroup(selectedClass);
 
@@ -395,11 +277,9 @@ service cloud.firestore {
         let generatedHTML = "";
         activeSubjects.forEach(subject => {
             const inputId = `subject_input_${subject.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}`;
-            
             const isMiddleClass = !["Nursery", "LKG", "UKG", "9", "10"].includes(selectedClass);
             const shouldDefaultToZero = isMiddleClass && (subject === "Computer" || subject === "M.Sc" || subject === "G.K");
             const defaultValue = shouldDefaultToZero ? 'value="0"' : '';
-
             const maxMarks = getMaxMarksForSubject(subject);
 
             generatedHTML += `
@@ -410,19 +290,19 @@ service cloud.firestore {
             `;
         });
         targetContainer.innerHTML = generatedHTML;
-    }
+    };
 
-    document.getElementById('marksForm').addEventListener('submit', function(e) {
+    // Firebase standard form submit implementation
+    document.getElementById('marksForm').addEventListener('submit', async function(e) {
         e.preventDefault();
+
         const rollNo = document.getElementById('rollNo').value.trim();
         const cls = document.getElementById('studentClass').value;
-
         const mappedMarksObj = {};
-        const subjectRowsInputs = document.querySelectorAll('#dynamicSubjectsInputs input[type="number"]');
-        
-        subjectRowsInputs.forEach(inputElement => {
-            const subjectRealName = inputElement.getAttribute('data-subject-name');
-            mappedMarksObj[subjectRealName] = parseInt(inputElement.value) || 0;
+
+        document.querySelectorAll('#dynamicSubjectsInputs input[type="number"]').forEach(input => {
+            const subject = input.getAttribute('data-subject-name');
+            mappedMarksObj[subject] = parseInt(input.value) || 0;
         });
 
         const studentData = {
@@ -431,102 +311,110 @@ service cloud.firestore {
             marks: mappedMarksObj
         };
 
-        localStorage.setItem(`student_record_${rollNo}`, JSON.stringify(studentData));
-        alert(`🎉 Success: PA-I Marks saved/updated for Roll No: ${rollNo}`);
-        
-        this.reset();
-        document.getElementById('dynamicSubjectsInputs').innerHTML = `<div id="noClassWarning">Please select a class to load its respective subjects.</div>`;
+        try {
+            // Firebase Firestore database me data save ho raha hai
+            await setDoc(doc(db, "students", rollNo), studentData);
+            alert(`🎉 Success: PA-I Marks saved to Firebase for Roll No: ${rollNo}`);
+            this.reset();
+            document.getElementById('dynamicSubjectsInputs').innerHTML = `<div id="noClassWarning">Please select a class to load its respective subjects.</div>`;
+        } catch (err) {
+            console.error(err);
+            alert("Error saving marks to Firebase Cloud database.");
+        }
     });
 
-    function generateReportCard() {
+    // Firebase Database se data fetch karke dynamic table banane ka logic
+    window.generateReportCard = async function() {
         const searchClass = document.getElementById('searchClass').value;
         const searchRoll = document.getElementById('searchRoll').value.trim();
         const reportCard = document.getElementById('reportCard');
         const tableBody = document.getElementById('marksTableBody');
-        
-        if (!searchClass) {
-            alert("Please select a Class first!");
-            return;
-        }
-        if (!searchRoll) {
-            alert("Please enter a Roll Number!");
-            return;
-        }
 
-        const rawData = localStorage.getItem(`student_record_${searchRoll}`);
-        
-        if (!rawData) {
-            alert("Error: No student record found matching this Roll Number on this site! Please submit marks first.");
-            reportCard.style.display = 'none';
-            return;
-        }
+        if (!searchClass) { alert("Please select Class"); return; }
+        if (!searchRoll) { alert("Please enter Roll Number"); return; }
 
-        const student = JSON.parse(rawData);
+        try {
+            // Firebase Firestore se target document download ho raha hai
+            const docRef = doc(db, "students", searchRoll);
+            const docSnap = await getDoc(docRef);
 
-        if (student.class !== searchClass) {
-            alert(`Access Denied: Entered Roll Number exists, but is not registered under Class ${searchClass}!`);
-            reportCard.style.display = 'none';
-            return;
-        }
-        
-        document.getElementById('lblName').innerText = student.name;
-        document.getElementById('lblRoll').innerText = searchRoll;
-        document.getElementById('lblClass').innerText = isNaN(student.class) ? student.class : `Class ${student.class}`;
+            if (!docSnap.exists()) {
+                alert("Error: No student record found in Firebase database!");
+                reportCard.style.display = 'none';
+                return;
+            }
 
-        tableBody.innerHTML = "";
-        let grandTotal = 0;
-        let totalMaxMarks = 0;
+            const student = docSnap.data();
 
-        for (const [subject, score] of Object.entries(student.marks)) {
-            const maxMarks = getMaxMarksForSubject(subject);
+            if (student.class !== searchClass) {
+                alert(`Access Denied: Entered Roll Number exists, but is registered under Class ${student.class}!`);
+                reportCard.style.display = 'none';
+                return;
+            }
 
-            const row = `<tr>
-                <td><strong>${subject}</strong></td>
-                <td>${maxMarks}</td>
-                <td><strong>${score}</strong></td>
-            </tr>`;
-            tableBody.innerHTML += row;
+            // Report elements mapping
+            document.getElementById('lblName').innerText = student.name;
+            document.getElementById('lblRoll').innerText = searchRoll;
+            document.getElementById('lblClass').innerText = isNaN(student.class) ? student.class : `Class ${student.class}`;
+
+            tableBody.innerHTML = "";
+            let grandTotal = 0;
+            let totalMaxMarks = 0;
+
+            for (const [subject, score] of Object.entries(student.marks)) {
+                const maxMarks = getMaxMarksForSubject(subject);
+                const row = `<tr>
+                    <td><strong>${subject}</strong></td>
+                    <td>${maxMarks}</td>
+                    <td><strong>${score}</strong></td>
+                </tr>`;
+                tableBody.innerHTML += row;
+                
+                grandTotal += score;
+                totalMaxMarks += maxMarks;
+            }
+
+            const percentage = parseFloat(((grandTotal / totalMaxMarks) * 100).toFixed(2));
             
-            grandTotal += score;
-            totalMaxMarks += maxMarks;
-        }
+            let gradeStr = "E";
+            let gradeColor = "#ef4444";
+            let gradeBg = "#fef2f2";
 
-        const percentage = parseFloat(((grandTotal / totalMaxMarks) * 100).toFixed(2));
-        
-        let gradeStr = "E";
-        let gradeColor = "#ef4444";
-        let gradeBg = "#fef2f2";
+            if (percentage >= 95) { gradeStr = "A++ 🌟"; gradeColor = "#10b981"; gradeBg = "#f0fdf4"; }
+            else if (percentage >= 90) { gradeStr = "A+ ✨"; gradeColor = "#22c55e"; gradeBg = "#f0fdf4"; }
+            else if (percentage >= 80) { gradeStr = "A 👑"; gradeColor = "#0284c7"; gradeBg = "#f0f9ff"; }
+            else if (percentage >= 70) { gradeStr = "B 👏"; gradeColor = "#3b82f6"; gradeBg = "#f0f9ff"; }
+            else if (percentage >= 55) { gradeStr = "C 👍"; gradeColor = "#eab308"; gradeBg = "#fefcbf"; }
+            else if (percentage >= 33) { gradeStr = "D 🔍"; gradeColor = "#f97316"; gradeBg = "#fff7ed"; }
 
-        if (percentage >= 95) { gradeStr = "A++ 🌟"; gradeColor = "#10b981"; gradeBg = "#f0fdf4"; }
-        else if (percentage >= 90) { gradeStr = "A+ ✨"; gradeColor = "#22c55e"; gradeBg = "#f0fdf4"; }
-        else if (percentage >= 80) { gradeStr = "A 👑"; gradeColor = "#0284c7"; gradeBg = "#f0f9ff"; }
-        else if (percentage >= 70) { gradeStr = "B 👏"; gradeColor = "#3b82f6"; gradeBg = "#f0f9ff"; }
-        else if (percentage >= 55) { gradeStr = "C 👍"; gradeColor = "#eab308"; gradeBg = "#fefcbf"; }
-        else if (percentage >= 33) { gradeStr = "D 🔍"; gradeColor = "#f97316"; gradeBg = "#fff7ed"; }
-
-        let gradeRowHTML = `<tr class="total-row" style="color: ${gradeColor}; background-color: ${gradeBg};">
-            <td>Grade</td>
-            <td>-</td>
-            <td style="font-size: 16px; font-weight: 800;">${gradeStr}</td>
-        </tr>`;
-        
-        tableBody.innerHTML += `
-            <tr class="total-row">
-                <td>Grand Total</td>
-                <td>${totalMaxMarks}</td>
-                <td>${grandTotal}</td>
-            </tr>
-            <tr class="total-row" style="color: var(--primary)">
-                <td>Percentage</td>
+            let gradeRowHTML = `<tr class="total-row" style="color: ${gradeColor}; background-color: ${gradeBg};">
+                <td>Grade</td>
                 <td>-</td>
-                <td>${percentage}%</td>
-            </tr>
-            ${gradeRowHTML}
-        `;
+                <td style="font-size: 16px; font-weight: 800;">${gradeStr}</td>
+            </tr>`;
+            
+            tableBody.innerHTML += `
+                <tr class="total-row">
+                    <td>Grand Total</td>
+                    <td>${totalMaxMarks}</td>
+                    <td>${grandTotal}</td>
+                </tr>
+                <tr class="total-row" style="color: var(--primary)">
+                    <td>Percentage</td>
+                    <td>-</td>
+                    <td>${percentage}%</td>
+                </tr>
+                ${gradeRowHTML}
+            `;
 
-        reportCard.style.display = 'block';
-        reportCard.scrollIntoView({ behavior: 'smooth' });
-    }
+            reportCard.style.display = 'block';
+            reportCard.scrollIntoView({ behavior: 'smooth' });
+
+        } catch (err) {
+            console.error(err);
+            alert("Unable to fetch record from Firebase Database.");
+        }
+    };
 </script>
 </body>
 </html>
