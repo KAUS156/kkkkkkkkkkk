@@ -1,7 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script type="module"></script>
     <meta charset="UTF-8">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDKVwHm3-RO3IkycB8VdwizUYQLgasGqzk",
+  authDomain: "lucky-triode-450317-g7.firebaseapp.com",
+  projectId: "lucky-triode-450317-g7",
+  storageBucket: "lucky-triode-450317-g7.firebasestorage.app",
+  messagingSenderId: "778199870672",
+  appId: "1:778199870672:web:62a9891e41b3a3d3f242d5"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PA-I Score Card Portal - Trident Public School</title>
     <style>
@@ -218,7 +238,125 @@
         </div>
     </div>
 </div>
+document.getElementById('marksForm')
+.addEventListener('submit', async function(e) {
+  e.preventDefault();
 
+  const rollNo =
+    document.getElementById('rollNo').value.trim();
+
+  const cls =
+    document.getElementById('studentClass').value;
+
+  const mappedMarksObj = {};
+
+  document
+    .querySelectorAll(
+      '#dynamicSubjectsInputs input[type="number"]'
+    )
+    .forEach(input => {
+      const subject =
+        input.getAttribute('data-subject-name');
+
+      mappedMarksObj[subject] =
+        parseInt(input.value) || 0;
+    });
+
+  const studentData = {
+    name:
+      document.getElementById('studentName')
+      .value.trim(),
+    class: cls,
+    marks: mappedMarksObj
+  };
+
+  try {
+    await setDoc(
+      doc(db, "students", rollNo),
+      studentData
+    );
+
+    alert("🎉 Marks Saved Successfully");
+
+    this.reset();
+
+    document.getElementById(
+      'dynamicSubjectsInputs'
+    ).innerHTML =
+      `<div id="noClassWarning">
+      Please select a class to load its respective subjects.
+      </div>`;
+
+  } catch (err) {
+    console.log(err);
+    alert("Error saving marks.");
+  }
+});
+async function generateReportCard() {
+
+  const searchClass =
+    document.getElementById('searchClass').value;
+
+  const searchRoll =
+    document.getElementById('searchRoll')
+    .value.trim();
+
+  if (!searchClass) {
+    alert("Please select class");
+    return;
+  }
+
+  if (!searchRoll) {
+    alert("Please enter roll number");
+    return;
+  }
+
+  try {
+
+    const docRef =
+      doc(db, "students", searchRoll);
+
+    const docSnap =
+      await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+      alert("No student record found");
+      return;
+    }
+
+    const student =
+      docSnap.data();
+
+    if (student.class !== searchClass) {
+      alert("Class mismatch");
+      return;
+    }
+
+    document.getElementById('lblName')
+      .innerText = student.name;
+
+    document.getElementById('lblRoll')
+      .innerText = searchRoll;
+
+    document.getElementById('lblClass')
+      .innerText = student.class;
+
+    // Yahan se aapka existing
+    // table generation code same rahega.
+
+  } catch (err) {
+    console.log(err);
+    alert("Unable to fetch record.");
+  }
+}
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
 <script>
     const schoolSubjectsConfiguration = {
         junior: [ "English", "Hindi", "Maths", "G.K"],
